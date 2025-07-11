@@ -456,11 +456,11 @@ def product_list():
         return
 
     # Filters
-    categories = sorted([p['category'] for p in products if p.get('category')])
-    sizes = sorted([p['size'] for p in products if p.get('size')])
-    category_filter = st.selectbox("Category", ["All"] + categories, key="category_filter_sb")
-    size_filter = st.selectbox("Size", ["All"] + sizes, key="size_filter_sb")
-    price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000), key="price_range_slider")
+    categories = sorted(set(p['category'] for p in products if p.get('category')))
+    sizes = sorted(set(p['size'] for p in products if p.get('size')))
+    category_filter = st.selectbox("Category", ["All"] + categories)
+    size_filter = st.selectbox("Size", ["All"] + sizes)
+    price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
 
     # Apply filters
     filtered = [
@@ -476,6 +476,24 @@ def product_list():
 
     cols_per_row = 3
 
+    # === Initialize Bitly Shorten URL ===
+    bitly_access_token = st.secrets["bitly"]["access_token"]
+
+    @st.cache_data(show_spinner=False)
+    def shorten_url(long_url):
+        headers = {
+            "Authorization": f"Bearer {bitly_access_token}",
+            "Content-Type": "application/json"
+        }
+        json_data = {"long_url": long_url}
+        response = requests.post("https://api-ssl.bitly.com/v4/shorten", headers=headers, json=json_data)
+        if response.status_code == 200:
+            return response.json()["link"]
+        else:
+            print("Bitly error:", response.text)
+            return long_url
+
+    # Wishlist toggle
     def toggle_wishlist(product_id, product_name, liked):
         if liked:
             st.session_state.liked_products.discard(product_id)
@@ -485,19 +503,18 @@ def product_list():
             st.toast(f"Added {product_name} to wishlist!", icon="❤️")
         st.rerun()
 
+    # Display filtered products
     for i, p in enumerate(filtered):
         if i % cols_per_row == 0:
             cols = st.columns(cols_per_row)
 
         with cols[i % cols_per_row]:
-            product_id = p.get('product_id')
-            if not product_id:
-                continue
-
+            product_id = p.get("product_id")
+            product_name = p.get("product_name", "Unnamed Product")
+            long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
+            share_url = shorten_url(long_url)
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
-            product_name = p.get('product_name', 'Product')
-            share_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
 
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
@@ -508,34 +525,23 @@ def product_list():
                     st.markdown(
                         f"""
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer">
-                                <img src="https://cdn-icons-png.flaticon.com/24/733/733585.png" alt="WhatsApp" title="Share on WhatsApp" />
-                            </a>
-                            <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank" rel="noopener noreferrer">
-                                <img src="https://cdn-icons-png.flaticon.com/24/733/733547.png" alt="Facebook" title="Share on Facebook" />
-                            </a>
-                            <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank" rel="noopener noreferrer">
-                                <img src="https://cdn-icons-png.flaticon.com/24/733/733579.png" alt="Twitter" title="Share on Twitter" />
-                            </a>
-                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank" rel="noopener noreferrer">
-                                <img src="https://cdn-icons-png.flaticon.com/24/733/733561.png" alt="LinkedIn" title="Share on LinkedIn" />
-                            </a>
-                            <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank" rel="noopener noreferrer">
-                                <img src="https://cdn-icons-png.flaticon.com/24/2111/2111646.png" alt="Telegram" title="Share on Telegram" />
-                            </a>
+                            <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733585.png" /></a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733547.png" /></a>
+                            <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733579.png" /></a>
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733561.png" /></a>
+                            <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/2111/2111646.png" /></a>
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
-                
+
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, product_name, liked)
 
-                is_expanded = st.session_state.expander_states.get(product_id, False)
-                with st.expander(f"🛍️ {product_name}", expanded=is_expanded):
-                    images = p.get('image_gallery', [])
-                    if images:
-                        streamlit_image_gallery(images)
+                with st.expander(f"🛍️ {product_name}", expanded=st.session_state.expander_states.get(product_id, False)):
+                    gallery = p.get("image_gallery", [])
+                    if gallery:
+                        streamlit_image_gallery(gallery)
                     else:
                         st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
 
@@ -559,20 +565,17 @@ def product_list():
                                 st.warning("Please log in to add items to your cart.")
                             else:
                                 qty = st.session_state[qty_key]
-                                existing = next(
-                                    (item for item in st.session_state.cart if item['product_id'] == product_id),
-                                    None
-                                )
+                                existing = next((item for item in st.session_state.cart if item['product_id'] == product_id), None)
                                 if existing:
                                     new_qty = min(existing['qty'] + qty, stock)
                                     if new_qty == existing['qty']:
-                                        st.warning(f"Cannot add more {p['product_name']}; stock limit reached.")
+                                        st.warning(f"Cannot add more {product_name}; stock limit reached.")
                                     else:
                                         existing['qty'] = new_qty
-                                        st.success(f"Updated {p['product_name']} to {existing['qty']} in cart.")
+                                        st.success(f"Updated {product_name} to {existing['qty']} in cart.")
                                 else:
                                     st.session_state.cart.append({**p, 'qty': qty})
-                                    st.success(f"Added {qty} x {p['product_name']} to cart.")
+                                    st.success(f"Added {qty} x {product_name} to cart.")
                                 st.session_state.trigger_rerun = True
                                 st.rerun()
                     else:
