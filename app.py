@@ -504,28 +504,30 @@ def product_list():
                 st.markdown(f"**{product_name}**")
                 st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
-                with st.expander("🔗Share"):
+                with st.expander("🔗 Share"):
                     st.markdown(
                         f"""
-                        <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
-                            📲 WhatsApp
-                        </a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
-                            📘 Facebook
-                        </a>
-                        <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
-                            🐦 Twitter
-                        </a>
-                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
-                            💼 LinkedIn
-                        </a>
-                        <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank" rel="noopener noreferrer">
-                            ✈️ Telegram
-                        </a>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer">
+                                <img src="https://cdn-icons-png.flaticon.com/24/733/733585.png" alt="WhatsApp" title="Share on WhatsApp" />
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank" rel="noopener noreferrer">
+                                <img src="https://cdn-icons-png.flaticon.com/24/733/733547.png" alt="Facebook" title="Share on Facebook" />
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank" rel="noopener noreferrer">
+                                <img src="https://cdn-icons-png.flaticon.com/24/733/733579.png" alt="Twitter" title="Share on Twitter" />
+                            </a>
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank" rel="noopener noreferrer">
+                                <img src="https://cdn-icons-png.flaticon.com/24/733/733561.png" alt="LinkedIn" title="Share on LinkedIn" />
+                            </a>
+                            <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank" rel="noopener noreferrer">
+                                <img src="https://cdn-icons-png.flaticon.com/24/2111/2111646.png" alt="Telegram" title="Share on Telegram" />
+                            </a>
+                        </div>
                         """,
                         unsafe_allow_html=True
                     )
-
+                
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, product_name, liked)
 
