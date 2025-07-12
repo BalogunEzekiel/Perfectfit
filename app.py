@@ -485,8 +485,7 @@ def product_list():
             "Authorization": f"Bearer {bitly_access_token}",
             "Content-Type": "application/json"
         }
-        json_data = {"long_url": long_url}
-        response = requests.post("https://api-ssl.bitly.com/v4/shorten", headers=headers, json=json_data)
+        response = requests.post("https://api-ssl.bitly.com/v4/shorten", headers=headers, json={"long_url": long_url})
         if response.status_code == 200:
             return response.json()["link"]
         else:
@@ -513,14 +512,25 @@ def product_list():
             product_name = p.get("product_name", "Unnamed Product")
             long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
             share_url = shorten_url(long_url)
-            liked = product_id in st.session_state.liked_products
-            heart_label = "❤️" if liked else "🤍"
-
+            st.code(f"{product_name} → {long_url} → {share_url}")
+            
             with st.container(border=True):
-                st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
-                st.markdown(f"**{product_name}**")
-                st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
+                st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)                
+                # Create two columns for name and price
+                name_col, price_col = st.columns([3, 1])                
+                with name_col:
+                    st.markdown(f"**{product_name}**")                
+                with price_col:
+                    st.markdown(f"<div style='text-align: right;'>₦{float(p.get('price', 0)):,.2f}</div>", unsafe_allow_html=True)
 
+            liked = product_id in st.session_state.liked_products
+            heart_label = "❤️" if liked else "🤍"            
+            # Create two columns: one for wishlist icon, one for Share expander
+            col1, col2 = st.columns([1, 4])            
+            with col1:
+                if st.button(heart_label, key=f"like_{product_id}"):
+                    toggle_wishlist(product_id, product_name, liked)            
+            with col2:
                 with st.expander("🔗 Share"):
                     st.markdown(
                         f"""
