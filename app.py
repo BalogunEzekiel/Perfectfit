@@ -353,30 +353,6 @@ else:
 #------------------------ Main Page --------------------------
 st.title("👗 Perfectfit Fashion Store")
 
-def fetch_products():
-    """
-    Fetches product data from the Supabase 'products' table.
-    Handles potential errors during the fetch operation.
-    """
-    try:
-        if 'supabase' not in st.session_state:
-            st.error("Supabase client not initialized. Please set `st.session_state.supabase`.")
-            return []
-
-        response = st.session_state.supabase.table("products").select(
-            "product_id, product_name, category, size, price, stock_quantity, description, image_url, image_gallery"
-        ).execute()
-
-        if hasattr(response, "status_code") and not (200 <= response.status_code < 300):
-            st.error(f"Error fetching products: Status code {response.status_code}")
-            return []
-
-        return response.data if response.data else []
-
-    except Exception as e:
-        st.error(f"Failed to fetch products: {str(e)}")
-        return []
-
 def streamlit_image_gallery(images):
     """
     Displays a simple image gallery in Streamlit.
@@ -410,32 +386,60 @@ def get_product_by_id(product_id):
         st.error(f"Error fetching product: {e}")
         return None
 
+def fetch_products():
+    """
+    Fetches product data from the Supabase 'products' table.
+    Handles potential errors during the fetch operation.
+    """
+    try:
+        if 'supabase' not in st.session_state:
+            st.error("Supabase client not initialized. Please set `st.session_state.supabase`.")
+            return []
+
+        response = st.session_state.supabase.table("products").select(
+            "product_id, product_name, category, size, price, stock_quantity, description, image_url, image_gallery"
+        ).execute()
+
+        if hasattr(response, "status_code") and not (200 <= response.status_code < 300):
+            st.error(f"Error fetching products: Status code {response.status_code}")
+            return []
+
+        return response.data if response.data else []
+
+    except Exception as e:
+        st.error(f"Failed to fetch products: {str(e)}")
+        return []
+
 def product_list():
     query_params = st.query_params
+    product_id = query_params.get("product_id", [None])[0]
 
-    # ✅ FIX: Ensure product_id is valid before continuing
-    if "product_id" in query_params:
-        product_id = query_params["product_id"][0]
+    # ✅ Show single product view if product_id is in URL
+    if product_id:
+        try:
+            product_id = int(product_id)
+            product = get_product_by_id(product_id)
 
-        # Wait for query param to become valid
-        if not product_id or not product_id.isdigit():
-            st.warning("Loading product details...")
-            st.experimental_rerun()
+            if not product:
+                st.error(f"❌ Product with ID {product_id} not found.")
+                return
 
-        product = get_product_by_id(product_id)
-
-        if product:
             st.subheader(f"🛍️ {product['product_name']}")
             st.image(product.get("image_url", ""), width=400)
-            st.write(f"**Price:** ₦{product.get('price', 'N/A')}")
+            st.write(f"**Price:** ₦{float(product.get('price', 0)):,.2f}")
             st.write(product.get("description", "No description available."))
+
             if st.button("🔙 Back to Products"):
                 st.query_params.clear()
                 st.rerun()
-        else:
-            st.error("❌ Product not found.")
-        return
 
+            st.stop()  # ✅ Ensure full product list doesn't render
+
+        except Exception as e:
+            st.error(f"Error displaying product detail: {e}")
+            st.stop()
+
+    # 🛍️ Full Product List
     st.subheader("🛍️ Available Products")
 
     if 'cart' not in st.session_state:
@@ -494,9 +498,7 @@ def product_list():
             product_id = p.get("product_id")
             product_name = p.get("product_name", "Unnamed Product")
 
-            # ✅ Use raw URL (DO NOT shorten)
-            long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
-            share_url = long_url
+            share_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
 
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
