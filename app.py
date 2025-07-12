@@ -470,7 +470,7 @@ def product_list():
     cols_per_row = 3
     bitly_access_token = st.secrets["bitly"]["access_token"]
 
-    @st.cache_data(show_spinner=False)
+#    @st.cache_data(show_spinner=False)
     def shorten_url(long_url):
         headers = {
             "Authorization": f"Bearer {bitly_access_token}",
