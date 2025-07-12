@@ -411,7 +411,6 @@ def get_product_by_id(product_id):
         return None
 
 def product_list():
-    # Handle query param to show a single product detail view
     query_params = st.query_params
     if "product_id" in query_params:
         product_id = query_params["product_id"][0]
@@ -427,12 +426,10 @@ def product_list():
                 st.rerun()
         else:
             st.error("❌ Product not found.")
-        return  # Stop further processing
+        return
 
-    # --- List All Products ---
     st.subheader("🛍️ Available Products")
 
-    # Initialize session state
     if 'cart' not in st.session_state:
         st.session_state.cart = []
     if 'liked_products' not in st.session_state:
@@ -441,11 +438,9 @@ def product_list():
         st.session_state.trigger_rerun = False
     if 'expander_states' not in st.session_state:
         st.session_state.expander_states = {}
-
     if 'supabase' not in st.session_state:
         st.error("Supabase client not initialized.")
         return
-
     if st.session_state.trigger_rerun:
         st.session_state.trigger_rerun = False
         st.rerun()
@@ -455,14 +450,12 @@ def product_list():
         st.info("No products available.")
         return
 
-    # Filters
     categories = sorted(set(p['category'] for p in products if p.get('category')))
     sizes = sorted(set(p['size'] for p in products if p.get('size')))
     category_filter = st.selectbox("Category", ["All"] + categories)
     size_filter = st.selectbox("Size", ["All"] + sizes)
     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
 
-    # Apply filters
     filtered = [
         p for p in products
         if (category_filter == "All" or p.get('category') == category_filter) and
@@ -475,8 +468,6 @@ def product_list():
         return
 
     cols_per_row = 3
-
-    # === Initialize Bitly Shorten URL ===
     bitly_access_token = st.secrets["bitly"]["access_token"]
 
     @st.cache_data(show_spinner=False)
@@ -492,7 +483,6 @@ def product_list():
             print("Bitly error:", response.text)
             return long_url
 
-    # Wishlist toggle
     def toggle_wishlist(product_id, product_name, liked):
         if liked:
             st.session_state.liked_products.discard(product_id)
@@ -502,7 +492,6 @@ def product_list():
             st.toast(f"Added {product_name} to wishlist!", icon="❤️")
         st.rerun()
 
-    # Display filtered products
     for i, p in enumerate(filtered):
         if i % cols_per_row == 0:
             cols = st.columns(cols_per_row)
@@ -510,27 +499,25 @@ def product_list():
         with cols[i % cols_per_row]:
             product_id = p.get("product_id")
             product_name = p.get("product_name", "Unnamed Product")
+
             long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
-            share_url = shorten_url(long_url)
-            st.code(f"{product_name} → {long_url}")
-            
+            share_url = shorten_url(long_url)  # ✅ Ensures unique, accurate link per product
+
             with st.container(border=True):
-                st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)                
-                # Create two columns for name and price
-                name_col, price_col = st.columns([3, 1])                
+                st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
+                name_col, price_col = st.columns([3, 1])
                 with name_col:
-                    st.markdown(f"**{product_name}**")                
+                    st.markdown(f"**{product_name}**")
                 with price_col:
                     st.markdown(f"<div style='text-align: right;'>₦{float(p.get('price', 0)):,.0f}</div>", unsafe_allow_html=True)
-                    
 
             liked = product_id in st.session_state.liked_products
-            heart_label = "❤️" if liked else "🤍"            
-            # Create two columns: one for wishlist icon, one for Share expander
-            col1, col2 = st.columns([1, 4])            
+            heart_label = "❤️" if liked else "🤍"
+
+            col1, col2 = st.columns([1, 4])
             with col1:
                 if st.button(heart_label, key=f"like_{product_id}"):
-                    toggle_wishlist(product_id, product_name, liked)            
+                    toggle_wishlist(product_id, product_name, liked)
             with col2:
                 with st.expander("🔗 Share"):
                     st.markdown(
@@ -589,6 +576,7 @@ def product_list():
                 else:
                     st.info("Out of Stock")
 
+#########################
 def view_cart():
     st.subheader("🛒 Your Cart")
     if not st.session_state.cart:
