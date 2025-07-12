@@ -468,20 +468,6 @@ def product_list():
         return
 
     cols_per_row = 3
-    bitly_access_token = st.secrets["bitly"]["access_token"]
-
-#    @st.cache_data(show_spinner=False)
-    def shorten_url(long_url):
-        headers = {
-            "Authorization": f"Bearer {bitly_access_token}",
-            "Content-Type": "application/json"
-        }
-        response = requests.post("https://api-ssl.bitly.com/v4/shorten", headers=headers, json={"long_url": long_url})
-        if response.status_code == 200:
-            return response.json()["link"]
-        else:
-            print("Bitly error:", response.text)
-            return long_url
 
     def toggle_wishlist(product_id, product_name, liked):
         if liked:
@@ -499,15 +485,8 @@ def product_list():
         with cols[i % cols_per_row]:
             product_id = p.get("product_id")
             product_name = p.get("product_name", "Unnamed Product")
-
-            # Generate a unique suffix to prevent Bitly from reusing short URLs
-            unique_suffix = int(time.time() * 1000)
-            long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}&uniq={unique_suffix}"
-            
-            # Debug print: shows exactly what is being sent to Bitly
-            st.code(f"[DEBUG] {product_name} → ID: {product_id} → {long_url}")
-            
-            share_url = shorten_url(long_url)
+            long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
+            share_url = long_url
 
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
