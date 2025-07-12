@@ -512,7 +512,7 @@ def product_list():
             product_name = p.get("product_name", "Unnamed Product")
             long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
             share_url = shorten_url(long_url)
-#            st.code(f"{product_name} → {long_url} → {share_url}")
+            st.code(f"{product_name} → {long_url}")
             
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)                
