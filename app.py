@@ -545,9 +545,6 @@ def product_list():
                         unsafe_allow_html=True
                     )
 
-                if st.button(heart_label, key=f"like_{product_id}"):
-                    toggle_wishlist(product_id, product_name, liked)
-
                 with st.expander(f"🛍️ {product_name}", expanded=st.session_state.expander_states.get(product_id, False)):
                     gallery = p.get("image_gallery", [])
                     if gallery:
