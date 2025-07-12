@@ -511,8 +511,8 @@ def product_list():
             product_id = p.get("product_id")
             product_name = p.get("product_name", "Unnamed Product")
             long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
-            share_url = shorten_url(long_url)
-            st.code(f"{product_name} → {long_url} → {share_url}")
+            share_url = shorten_url(long_url)0
+#            st.code(f"{product_name} → {long_url} → {share_url}")
             
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)                
@@ -546,48 +546,48 @@ def product_list():
                         unsafe_allow_html=True
                     )
 
-                with st.expander(f"🛍️ {product_name}", expanded=st.session_state.expander_states.get(product_id, False)):
-                    gallery = p.get("image_gallery", [])
-                    if gallery:
-                        streamlit_image_gallery(gallery)
-                    else:
-                        st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
+            with st.expander(f"🛍️ {product_name}", expanded=st.session_state.expander_states.get(product_id, False)):
+                gallery = p.get("image_gallery", [])
+                if gallery:
+                    streamlit_image_gallery(gallery)
+                else:
+                    st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
 
-                    st.markdown(f"### {product_name}")
-                    st.markdown(f"**Price:** ₦{float(p.get('price', 0)):,.2f}")
-                    st.markdown(f"**Category:** {p.get('category', 'N/A')}")
-                    st.markdown(f"**Size:** {p.get('size', 'N/A')}")
-                    st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0))}")
-                    st.markdown("##### Description:")
-                    st.write(p.get('description', 'No description provided.'))
+                st.markdown(f"### {product_name}")
+                st.markdown(f"**Price:** ₦{float(p.get('price', 0)):,.2f}")
+                st.markdown(f"**Category:** {p.get('category', 'N/A')}")
+                st.markdown(f"**Size:** {p.get('size', 'N/A')}")
+                st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0))}")
+                st.markdown("##### Description:")
+                st.write(p.get('description', 'No description provided.'))
 
-                    stock = int(p.get('stock_quantity', 0))
-                    if stock > 0:
-                        qty_key = f"qty_modal_{product_id}"
-                        if qty_key not in st.session_state:
-                            st.session_state[qty_key] = 1
-                        st.number_input("Quantity", min_value=1, max_value=stock, key=qty_key)
+                stock = int(p.get('stock_quantity', 0))
+                if stock > 0:
+                    qty_key = f"qty_modal_{product_id}"
+                    if qty_key not in st.session_state:
+                        st.session_state[qty_key] = 1
+                    st.number_input("Quantity", min_value=1, max_value=stock, key=qty_key)
 
-                        if st.button("🛒 Add to Cart", key=f"modal_cart_{product_id}", use_container_width=True):
-                            if not st.session_state.get('logged_in', False):
-                                st.warning("Please log in to add items to your cart.")
-                            else:
-                                qty = st.session_state[qty_key]
-                                existing = next((item for item in st.session_state.cart if item['product_id'] == product_id), None)
-                                if existing:
-                                    new_qty = min(existing['qty'] + qty, stock)
-                                    if new_qty == existing['qty']:
-                                        st.warning(f"Cannot add more {product_name}; stock limit reached.")
-                                    else:
-                                        existing['qty'] = new_qty
-                                        st.success(f"Updated {product_name} to {existing['qty']} in cart.")
+                    if st.button("🛒 Add to Cart", key=f"modal_cart_{product_id}", use_container_width=True):
+                        if not st.session_state.get('logged_in', False):
+                            st.warning("Please log in to add items to your cart.")
+                        else:
+                            qty = st.session_state[qty_key]
+                            existing = next((item for item in st.session_state.cart if item['product_id'] == product_id), None)
+                            if existing:
+                                new_qty = min(existing['qty'] + qty, stock)
+                                if new_qty == existing['qty']:
+                                    st.warning(f"Cannot add more {product_name}; stock limit reached.")
                                 else:
-                                    st.session_state.cart.append({**p, 'qty': qty})
-                                    st.success(f"Added {qty} x {product_name} to cart.")
-                                st.session_state.trigger_rerun = True
-                                st.rerun()
-                    else:
-                        st.info("Out of Stock")
+                                    existing['qty'] = new_qty
+                                    st.success(f"Updated {product_name} to {existing['qty']} in cart.")
+                            else:
+                                st.session_state.cart.append({**p, 'qty': qty})
+                                st.success(f"Added {qty} x {product_name} to cart.")
+                            st.session_state.trigger_rerun = True
+                            st.rerun()
+                else:
+                    st.info("Out of Stock")
 
 def view_cart():
     st.subheader("🛒 Your Cart")
