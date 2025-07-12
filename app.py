@@ -412,8 +412,16 @@ def get_product_by_id(product_id):
 
 def product_list():
     query_params = st.query_params
+
+    # ✅ FIX: Ensure product_id is valid before continuing
     if "product_id" in query_params:
         product_id = query_params["product_id"][0]
+
+        # Wait for query param to become valid
+        if not product_id or not product_id.isdigit():
+            st.warning("Loading product details...")
+            st.experimental_rerun()
+
         product = get_product_by_id(product_id)
 
         if product:
@@ -485,8 +493,10 @@ def product_list():
         with cols[i % cols_per_row]:
             product_id = p.get("product_id")
             product_name = p.get("product_name", "Unnamed Product")
+
+            # ✅ Use raw URL (DO NOT shorten)
             long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
-            share_url = long_url  # ← No shortening anymore!
+            share_url = long_url
 
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
@@ -494,7 +504,10 @@ def product_list():
                 with name_col:
                     st.markdown(f"**{product_name}**")
                 with price_col:
-                    st.markdown(f"<div style='text-align: right;'>₦{float(p.get('price', 0)):,.0f}</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div style='text-align: right;'>₦{float(p.get('price', 0)):,.0f}</div>",
+                        unsafe_allow_html=True
+                    )
 
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
@@ -503,28 +516,20 @@ def product_list():
             with col1:
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, product_name, liked)
-
             with col2:
                 with st.expander("🔗 Share"):
-                    wa = f"https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}"
-                    fb = f"https://www.facebook.com/sharer/sharer.php?u={share_url}"
-                    tw = f"https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}"
-                    li = f"https://www.linkedin.com/sharing/share-offsite/?url={share_url}"
-                    tg = f"https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}"
                     st.markdown(
                         f"""
-                        <div style="display:flex;gap:10px;align-items:center;">
-                          <a href="{wa}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733585.png" /></a>
-                          <a href="{fb}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733547.png" /></a>
-                          <a href="{tw}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733579.png" /></a>
-                          <a href="{li}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733561.png" /></a>
-                          <a href="{tg}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/2111/2111646.png" /></a>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733585.png" /></a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733547.png" /></a>
+                            <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733579.png" /></a>
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/733/733561.png" /></a>
+                            <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank"><img src="https://cdn-icons-png.flaticon.com/24/2111/2111646.png" /></a>
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
-                    # Optional debug print
-                    st.caption(f"[DEBUG] Share URL: {share_url}")
 
             with st.expander(f"🛍️ {product_name}", expanded=st.session_state.expander_states.get(product_id, False)):
                 gallery = p.get("image_gallery", [])
