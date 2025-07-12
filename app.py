@@ -572,7 +572,7 @@ def product_list():
                                 st.session_state.cart.append({**p, 'qty': qty})
                                 st.success(f"Added {qty} x {product_name} to cart.")
                             st.session_state.expander_states[product_id] = False
-                            st.session_state.trigger_rerun = True
+#                            st.session_state.trigger_rerun = True
                             st.rerun()
                 else:
                     st.info("Out of Stock")
