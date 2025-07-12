@@ -511,7 +511,7 @@ def product_list():
             product_id = p.get("product_id")
             product_name = p.get("product_name", "Unnamed Product")
             long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
-            share_url = shorten_url(long_url)0
+            share_url = shorten_url(long_url)
 #            st.code(f"{product_name} → {long_url} → {share_url}")
             
             with st.container(border=True):
