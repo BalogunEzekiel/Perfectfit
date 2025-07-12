@@ -521,7 +521,8 @@ def product_list():
                 with name_col:
                     st.markdown(f"**{product_name}**")                
                 with price_col:
-                    st.markdown(f"<div style='text-align: right;'>₦{float(p.get('price', 0)):,.2f}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='text-align: right;'>₦{float(p.get('price', 0)):,.0f}</div>", unsafe_allow_html=True)
+                    
 
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"            
