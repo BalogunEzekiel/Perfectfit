@@ -500,8 +500,14 @@ def product_list():
             product_id = p.get("product_id")
             product_name = p.get("product_name", "Unnamed Product")
 
-            long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
-            share_url = shorten_url(long_url)  # ✅ Ensures unique, accurate link per product
+            # Generate a unique suffix to prevent Bitly from reusing short URLs
+            unique_suffix = int(time.time() * 1000)
+            long_url = f"https://perfectfit.streamlit.app/?product_id={product_id}&uniq={unique_suffix}"
+            
+            # Debug print: shows exactly what is being sent to Bitly
+            st.code(f"[DEBUG] {product_name} → ID: {product_id} → {long_url}")
+            
+            share_url = shorten_url(long_url)
 
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
