@@ -353,23 +353,43 @@ else:
 #------------------------ Main Page --------------------------
 st.title("👗 Perfectfit Fashion Store")
 
-def streamlit_image_gallery(images):
+def streamlit_image_gallery_single_row(images):
     """
-    Displays a simple image gallery in Streamlit.
+    Displays the first up to 4 images in a single, well-aligned row.
     """
     if not images:
         st.write("No images available for this product.")
         return
 
-    num_images = len(images)
-    cols = st.columns(min(num_images, 4))
+    # 1. Determine how many columns to create (max 4)
+    num_cols = min(len(images), 4)
+    cols = st.columns(num_cols)
 
-    for i, image_url in enumerate(images):
-        if i < len(cols):
-            with cols[i]:
-                st.image(image_url, use_container_width=True)
-        else:
-            st.image(image_url, use_container_width=True)
+    # 2. Iterate only over the number of columns created
+    for i in range(num_cols):
+        image_url = images[i]
+        with cols[i]:
+            # Setting a smaller caption can sometimes help alignment
+            st.image(image_url, 
+                     caption=f"Image {i+1}", # Optional: Add a caption
+                     use_container_width=True)
+#def streamlit_image_gallery(images):
+#    """
+#    Displays a simple image gallery in Streamlit.
+#    """
+#    if not images:
+#        st.write("No images available for this product.")
+#        return
+
+#    num_images = len(images)
+#    cols = st.columns(min(num_images, 4))
+
+#    for i, image_url in enumerate(images):
+#        if i < len(cols):
+#            with cols[i]:
+#                st.image(image_url, use_container_width=True)
+#        else:
+#            st.image(image_url, use_container_width=True)
 
 def get_product_by_id(product_id):
     try:
