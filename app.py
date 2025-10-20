@@ -14,7 +14,6 @@ from datetime import datetime
 import time
 from streamlit_image_gallery import streamlit_image_gallery
 import plotly.express as px
-import math
 
 st.set_page_config(page_title="Perfectfit Fashion", layout="wide")
 
