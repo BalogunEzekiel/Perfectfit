@@ -460,8 +460,47 @@ def product_list():
             st.stop()
 
     # 🛍️ Full Product List
-    st.subheader("🛍️ Available Products")     if 'cart' not in st.session_state:         st.session_state.cart = []     if 'liked_products' not in st.session_state:         st.session_state.liked_products = set()     if 'trigger_rerun' not in st.session_state:         st.session_state.trigger_rerun = False     if 'expander_states' not in st.session_state:         st.session_state.expander_states = {}     if 'supabase' not in st.session_state:         st.error("Supabase client not initialized.")         return     if st.session_state.trigger_rerun:         st.session_state.trigger_rerun = False         st.rerun()     products = fetch_products()     if not products:         st.info("No products available.")         return     categories = sorted(set(p['category'] for p in products if p.get('category')))     sizes = sorted(set(p['size'] for p in products if p.get('size')))     category_filter = st.selectbox("Category", ["All"] + categories)     size_filter = st.selectbox("Size", ["All"] + sizes)     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))     filtered = [         p for p in products         if (category_filter == "All" or p.get('category') == category_filter) and            (size_filter == "All" or p.get('size') == size_filter) and            (price_range[0] <= float(p.get('price', 0)) <= price_range[1])     ]     if not filtered:         st.info("No products match your filters.")         return     cols_per_row = 3
-                
+    st.subheader("🛍️ Available Products")
+
+    if 'cart' not in st.session_state:
+        st.session_state.cart = []
+    if 'liked_products' not in st.session_state:
+        st.session_state.liked_products = set()
+    if 'trigger_rerun' not in st.session_state:
+        st.session_state.trigger_rerun = False
+    if 'expander_states' not in st.session_state:
+        st.session_state.expander_states = {}
+    if 'supabase' not in st.session_state:
+        st.error("Supabase client not initialized.")
+        return
+    if st.session_state.trigger_rerun:
+        st.session_state.trigger_rerun = False
+        st.rerun()
+
+    products = fetch_products()
+    if not products:
+        st.info("No products available.")
+        return
+
+    categories = sorted(set(p['category'] for p in products if p.get('category')))
+    sizes = sorted(set(p['size'] for p in products if p.get('size')))
+    category_filter = st.selectbox("Category", ["All"] + categories)
+    size_filter = st.selectbox("Size", ["All"] + sizes)
+    price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
+
+    filtered = [
+        p for p in products
+        if (category_filter == "All" or p.get('category') == category_filter) and
+           (size_filter == "All" or p.get('size') == size_filter) and
+           (price_range[0] <= float(p.get('price', 0)) <= price_range[1])
+    ]
+
+    if not filtered:
+        st.info("No products match your filters.")
+        return
+
+    cols_per_row = 3
+    
     def toggle_wishlist(product_id, product_name, liked):
         if liked:
             st.session_state.liked_products.discard(product_id)
