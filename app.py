@@ -462,6 +462,7 @@ def product_list():
     # 🛍️ Full Product List
     st.subheader("🛍️ Available Products")
 
+    # --- Initialize session state ---
     if 'cart' not in st.session_state:
         st.session_state.cart = []
     if 'liked_products' not in st.session_state:
@@ -472,35 +473,77 @@ def product_list():
         st.session_state.expander_states = {}
     if 'supabase' not in st.session_state:
         st.error("Supabase client not initialized.")
-        return
+        st.stop()
+    
     if st.session_state.trigger_rerun:
         st.session_state.trigger_rerun = False
         st.rerun()
-
+    
+    # --- Fetch and filter products ---
     products = fetch_products()
     if not products:
         st.info("No products available.")
-        return
-
+        st.stop()
+    
     categories = sorted(set(p['category'] for p in products if p.get('category')))
     sizes = sorted(set(p['size'] for p in products if p.get('size')))
     category_filter = st.selectbox("Category", ["All"] + categories)
     size_filter = st.selectbox("Size", ["All"] + sizes)
     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
-
+    
     filtered = [
         p for p in products
-        if (category_filter == "All" or p.get('category') == category_filter) and
-           (size_filter == "All" or p.get('size') == size_filter) and
-           (price_range[0] <= float(p.get('price', 0)) <= price_range[1])
+        if (category_filter == "All" or p.get('category') == category_filter)
+        and (size_filter == "All" or p.get('size') == size_filter)
+        and (price_range[0] <= float(p.get('price', 0)) <= price_range[1])
     ]
-
+    
     if not filtered:
         st.info("No products match your filters.")
-        return
-
+        st.stop()
+    
+    # --- Display products in rows and columns ---
     cols_per_row = 3
-
+    num_rows = math.ceil(len(filtered) / cols_per_row)
+    
+    st.write("")  # adds spacing
+    
+    for row in range(num_rows):
+        cols = st.columns(cols_per_row, gap="large")
+        for i in range(cols_per_row):
+            index = row * cols_per_row + i
+            if index >= len(filtered):
+                break
+    
+            product = filtered[index]
+            image_url = product.get("image_url", "")
+            name = product.get("name", "Unnamed Product")
+            category = product.get("category", "N/A")
+            price = float(product.get("price", 0))
+    
+            with cols[i]:
+                # Product card layout
+                st.markdown(
+                    f"""
+                    <div style="
+                        border:1px solid #e0e0e0; 
+                        border-radius:12px; 
+                        padding:10px; 
+                        background-color:#fafafa; 
+                        text-align:center;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+                    ">
+                        <img src="{image_url}" 
+                             alt="{name}" 
+                             style="width:100%; height:200px; object-fit:cover; border-radius:10px;">
+                        <h4 style="margin-top:10px; color:#333;">{name}</h4>
+                        <p style="margin:0; color:gray;">Category: {category}</p>
+                        <p style="margin:5px 0 10px 0; font-weight:bold; color:#111;">₦{price:,.2f}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                
     def toggle_wishlist(product_id, product_name, liked):
         if liked:
             st.session_state.liked_products.discard(product_id)
