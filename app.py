@@ -516,11 +516,11 @@ def product_list():
             if index >= len(filtered):
                 break
     
-            product = filtered[index]
-            image_url = product.get("image_url", "")
-            name = product.get("name", "Unnamed Product")
-            category = product.get("category", "N/A")
-            price = float(product.get("price", 0))
+#            product = filtered[index]
+#            image_url = product.get("image_url", "")
+#            name = product.get("name", "Unnamed Product")
+#            category = product.get("category", "N/A")
+#            price = float(product.get("price", 0))
     
             with cols[i]:
                 # Product card layout
